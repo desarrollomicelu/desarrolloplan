@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+ 
+<head>
+  <!-- Basic -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- Mobile Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <!-- Site Metas -->
+  <meta name="keywords" content="" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <meta http-equiv="refresh" content="14400">
+ 
+  <title>MI PERFIL</title>
+  <link rel="icon" type="image/x-icon" href="/static/images/icon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+ 
+  <!-- slider stylesheet -->
+  <link rel="stylesheet" type="text/css"
+    href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.1.3/assets/owl.carousel.min.css" />
+   
+ 
+  <!-- bootstrap core css -->
+ 
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+ 
+ 
+  <!-- fonts style -->
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,700|Roboto:400,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Custom styles for this template -->
+ 
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/beneficios.css') }}">
+  <!-- responsive style -->
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/responsive.css') }}">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/miperfil.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/editarperfil.js') }}"></script>
+</head>
+ 
+<body>
+  <div class="hero_area">
+    <!-- header section strats -->
+    <header class="header_section">
+        <div class="container-fluid">
+          <nav class="navbar navbar-expand-lg custom_nav-container ">
+            <a class="navbar-brand" href="/quesonpuntos">
+              <span>
+                Micelu.co
+              </span>
+            </a>
+            <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse"
+              data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+              aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+ 
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+              <div class="d-flex mx-auto flex-column flex-lg-row align-items-center">
+                <ul class="navbar-nav  ">
+                  <li class="nav-item">
+                    <a class="nav-link" href="/homepuntos">Personas</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/quesonpuntos">¿Que son Puntos?</a>
+                  </li>
+                  <li class="nav-item active">
+                    <a class="nav-link" href="/mhistorialcompras">Compras Realizadas</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/mpuntosprincipal">Canjea Puntos</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="logout">Cerrar sesion</a>
+                  </li>
+                  <li class="nav-item d-flex align-items-center">
+                    <!-- Tarjeta con puntos -->
+                    <div class="card bg-light text-dark px-2 py-1" style="border-radius: 5px;">
+                        <span class="fw-bold">Puntos</span>
+                        <span class="badge bg-primary ms-2">102</span>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="dropdown ms-2">
+                <a class="nav-link custom-dropdown-toggle" href="#" id="userDropdown" role="button">
+                  <i class="material-icons custom-icon">account_circle</i>
+                  <i class="material-icons custom-icon-arrow">arrow_drop_down</i>
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                  <li><a class="custom-dropdown-item" href="/miperfil">Mi perfil</a></li>
+                </ul>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </header>
+ 
+    <div class="footer">
+ 
+        <div class="Principalfooter">
+          <div class="half">
+            <a href="https://wa.me/3053333330" target="_blank" rel="noopener noreferrer" class="icon-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i>
+            </a>
+            Comprar
+        </div>
+        <div class="social-icons">
+            <!-- Icono de TikTok -->
+            <a href="https://www.tiktok.com/@micelu_co" target="_blank" rel="noopener noreferrer" class="icon-tiktok">
+                <i class="fa-brands fa-tiktok"></i>
+            </a>
+            Tiktok
+            <!-- Icono de Instagram -->
+            <a href="https://www.instagram.com/micelu.co" target="_blank" rel="noopener noreferrer" class="icon-instagram">
+                <i class="fa-brands fa-instagram"></i>
+            </a>
+            Instagram
+        </div>
+      </div>
+      <p>&copy; <a href="https://micelu.co/" class="footer-link">Micelu.co</a></p>
+      </div>
+      <section class="profile_section">
+        <table class="custom-table">
+        <div class="container">
+          <h2 class="text-center mb-4 poppins-bold">MI PERFIL</h2>
+          <div class="profile-container">
+            <div class="profile-item">
+              <div class="profile-label"> <i class="fa-solid fa-medal" style="color: black;"></i> Rango</div>
+              <div class="profile-value">
+                {% if usuario.rango == 'ORO' %}
+                  <img src="{{ url_for('static', filename='images/oro.png') }}" alt="ORO" title="ORO">
+                {% elif usuario.rango == 'PLATA' %}
+                  <img src="{{ url_for('static', filename='images/plata.png') }}" alt="PLATA" title="PLATA">
+                {% elif usuario.rango == 'BRONCE' %}
+                  <img src="{{ url_for('static', filename='images/bronce.png') }}" alt="BRONCE" title="BRONCE">
+                {% elif usuario.rango == 'VARIOS' %}
+                  <img src="{{ url_for('static', filename='images/varios.png') }}" alt="VARIOS" title="VARIOS">
+                {% elif usuario.rango == 'NUEVO' %}
+                  <img src="{{ url_for('static', filename='images/nuevo.png') }}" alt="NUEVO" title="NUEVO">
+                {% else %}
+                  {{ usuario.rango }}
+                {% endif %}
+              </div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-label">
+                  <i class="fa-solid fa-id-card" style="color: black;"></i> Documento
+              </div>
+              <div class="profile-value">{{ usuario.documento }}</div>
+          </div>          
+          <div class="profile-item">
+            <div class="profile-label">
+                <i class="fa-solid fa-user" style="color: black;"></i> Nombre
+            </div>
+            <div class="profile-value">{{ usuario.nombre }}</div>
+        </div>
+       
+        <div class="profile-item">
+          <div class="profile-label">
+              <i class="fa-solid fa-envelope" style="color: black;"></i> Email
+          </div>
+          <div class="profile-value">
+              <span id="email-display">{{ usuario.email }}</span>
+              <input type="email" id="email-input" style="display: none;" value="{{ usuario.email }}">
+              <button onclick="toggleEdit('email')" class="edit-btn"><i class="fas fa-edit"></i> Editar</button>
+              <button onclick="saveEdit('email')" class="save-btn" style="display: none;"><i class="fas fa-check"></i> Guardar</button>
+          </div>
+      </div>
+     
+      <div class="profile-item">
+          <div class="profile-label">
+              <i class="fa-solid fa-phone" style="color: black;"></i> Teléfono
+          </div>
+          <div class="profile-value">
+              <span id="telefono-display">{{ usuario.telefono }}</span>
+              <input type="tel" id="telefono-input" style="display: none;" value="{{ usuario.telefono }}">
+              <button onclick="toggleEdit('telefono')" class="edit-btn"><i class="fas fa-edit"></i> Editar</button>
+              <button onclick="saveEdit('telefono')" class="save-btn" style="display: none;"><i class="fas fa-check"></i> Guardar</button>
+          </div>
+      </div>
+       
+        <div class="profile-item">
+            <div class="profile-label">
+                <i class="fa-solid fa-city" style="color: black;"></i> Ciudad
+            </div>
+            <div class="profile-value">{{ usuario.ciudad }}</div>
+        </div>
+       
+        <div class="profile-item">
+            <div class="profile-label">
+                <i class="fa-solid fa-file-contract" style="color: black;"></i> Aceptó los términos de uso
+            </div>
+            <div class="profile-value">{{ "Sí" if usuario.habeasdata else "No" }}</div>
+        </div>
+       
+        <div class="profile-item">
+            <div class="profile-label">
+                <i class="fa-solid fa-user-check" style="color: black;"></i> Estado
+            </div>
+            <div class="profile-value">{{ "Activo" if usuario.estado else "Inactivo" }}</div>
+        </div>
+      </table>
+          </div>
+        </div>
+      </section>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
+  </body>
+ 
+  </html>

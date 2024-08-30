@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/logo1.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/alertacrear.js') }}"></script>
+
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <div class="flash-messages1">
+            {% for category, message in messages %}
+                <div class="flash1 {{ category }}">
+                    <span class="close-btn">&times;</span>
+                    {{ message|safe }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <a href="{{ url_for('login') }}" class="back-arrow">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <section class="d-flex justify-content-center align-items-center">
+        <div class="panel card shadow col-xs-12 col-sm-6 col-md-6 col-lg-4 p-4">
+            <div class="title-container">
+                <h4 class="title-text">
+                    REGISTRO DE USUARIO
+                </h4>
+            </div>
+            <div class="mb-1">
+                <form action="{{ url_for('crear_pass') }}" method="POST">
+                    <div class="mb-4">
+                        <div>
+                            <label for="documento" class="label-text"><i class="fa-solid fa-id-card" style="color: black;" ></i> Ingrese Su Documento:</label>
+                            <input type="text" class="form-control" name="documento" id="documento" placeholder="Ingrese Su Cedula o Nit" required>
+                            <div class="documento"></div>
+                        </div>
+                    </div>                    
+                    <div class="mb-4">
+                        <label for="password1" class="label-text"><i class="fas fa-lock-open" style="color: black;"></i> Nueva Contraseña:</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" name="contraseña" id="password1" placeholder="Ingrese Su Primera Contraseña" required>
+                            <span class="input-group-text position-absolute end-0 bg-transparent border-0" id="togglePassword1" style="z-index: 10; cursor: pointer;">
+                                <i class="bi bi-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password2" class="label-text"><i class="fas fa-lock" style="color: black;"></i> Confirme Su Contraseña:</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" name="confirmar_contraseña" id="password2" placeholder="Ingrese Nuevamente Su Contraseña" required>
+                            <span class="input-group-text position-absolute end-0 bg-transparent border-0" id="togglePassword2" style="z-index: 10; cursor: pointer;">
+                                <i class="bi bi-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" class="form-check-input" id="habeasdata" name="habeasdata" required>
+                        <label class="form-check-label" for="habeasdata">
+                            Acepto recibir información de marketing y promociones.
+                        </label>
+                    </div>
+                    <div class="mb-2">
+                        <button id="botton" type="submit" class="boton1 col-12 d-flex justify-content-between">
+                            <span class="button-text">CREAR</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+    <br>
+    <script>
+        function togglePasswordVisibility(inputId, toggleId) {
+            var passwordInput = document.getElementById(inputId);
+            var toggleIcon = document.getElementById(toggleId).querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+
+        document.getElementById('togglePassword1').addEventListener('click', function() {
+            togglePasswordVisibility('password1', 'togglePassword1');
+        });
+
+        document.getElementById('togglePassword2').addEventListener('click', function() {
+            togglePasswordVisibility('password2', 'togglePassword2');
+        });
+    </script>
+
+<!-- menu section -->
+  
+      
+<div class="footer">
+
+    <div class="Principalfooter">
+        <div class="half">
+            <a href="https://wa.me/3053333330" target="_blank" rel="noopener noreferrer" class="icon-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i>
+            </a>
+            Comprar
+        </div>
+        <div class="social-icons">
+            <!-- Icono de TikTok -->
+            <a href="https://www.tiktok.com/@micelu_co" target="_blank" rel="noopener noreferrer" class="icon-tiktok">
+                <i class="fa-brands fa-tiktok"></i>
+            </a>
+            Tiktok
+            <!-- Icono de Instagram -->
+            <a href="https://www.instagram.com/micelu.co" target="_blank" rel="noopener noreferrer" class="icon-instagram">
+                <i class="fa-brands fa-instagram"></i>
+            </a>
+            Instagram
+        </div>
+        
+  </div>
+  <p>&copy; <a href="https://micelu.co/" class="footer-link">Micelu.co</a></p>
+  </div>
+
+
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>    
+
+</body>
+</html>
