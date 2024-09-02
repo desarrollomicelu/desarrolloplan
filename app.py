@@ -14,6 +14,8 @@ from flask_bcrypt import Bcrypt
 from flask_mail import Mail, Message
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
  
  
 from pytz import UTC
@@ -69,6 +71,17 @@ class Puntos_Clientes(db.Model):
     #canal_trasanccion = db.Column(db.String(50))
     puntos_redimidos = db.Column(db.String(50))
     fecha_registro = db.Column(db.TIMESTAMP(timezone=True))
+    
+class historial_beneficio(db.Model):
+    __bind_key__ = 'db2'
+    __tablename__ = 'historial_beneficio'
+    __table_args__ = {'schema': 'plan_beneficios'}
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    documento = db.Column(db.String(50), primary_key=True)
+    nombre_producto = db.Column(db.String(70))
+    valor_venta = db.Column(db.Integer)
+    puntos_utilizados = db.Column(db.Integer)
+    fecha_compra = db.Column(db.TIMESTAMP(timezone=True))
     
     
 def login_required(f):
@@ -220,8 +233,6 @@ def make_session_permanent():
     session.permanent = True
 
 
-
-
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -335,10 +346,11 @@ def mhistorialcompras():
         puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
         if puntos_usuario:
             puntos_usuario.total_puntos = total_puntos_nuevos
+            puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
+            total_puntos = total_puntos_nuevos - puntos_redimidos
             db.session.commit()
-            total_puntos = puntos_usuario.total_puntos
         else:
-            nuevo_usuario = Puntos_Clientes(documento=documento, total_puntos=total_puntos_nuevos)
+            nuevo_usuario = Puntos_Clientes(documento=documento, total_puntos=total_puntos_nuevos, puntos_redimidos='0')
             db.session.add(nuevo_usuario)
             db.session.commit()
             total_puntos = total_puntos_nuevos
@@ -349,54 +361,66 @@ def mhistorialcompras():
         # Manejar cualquier error que pueda ocurrir
         print(f"Error: {str(e)}")
         return "Ha ocurrido un error al procesar su solicitud.", 500
-
+    
 @app.route('/mpuntosprincipal')
 @login_required
 def mpuntosprincipal():
-    # Asumimos que el documento del usuario está en la sesión
     documento = session.get('user_documento')
-    
     total_puntos = 0
     if documento:
-        # Consulta a la base de datos para obtener los puntos del usuario
         puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
         if puntos_usuario:
-            total_puntos = puntos_usuario.total_puntos
+            puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
+            total_puntos = puntos_usuario.total_puntos - puntos_redimidos
     
     return render_template('mpuntosprincipal.html', total_puntos=total_puntos)
 
 #Ruta para manejar el descuento de los puntos
+
 @app.route('/redimir_puntos', methods=['POST'])
 @login_required
 def redimir_puntos():
     try:
         documento = session.get('user_documento')
-        punto_a_redimir = int(request.json.get('points'))
+        puntos_a_redimir = int(request.json.get('points'))
         
         puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
-        current_points = int(puntos_usuario.total_puntos)
+        if not puntos_usuario:
+            return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
         
-        if punto_a_redimir > current_points:
+        puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
+        total_puntos = puntos_usuario.total_puntos
+        puntos_disponibles = total_puntos - puntos_redimidos
+        
+        if puntos_a_redimir > puntos_disponibles:
             return jsonify({'success': False, 'message': 'No tienes suficientes puntos'}), 400
         
-        new_total = current_points - punto_a_redimir
-        puntos_usuario.total_puntos = str(new_total)
+        # Actualizar puntos redimidos
+        puntos_usuario.puntos_redimidos = str(puntos_redimidos + puntos_a_redimir)
+        
+        # Actualizar total de puntos
+        puntos_usuario.total_puntos = total_puntos - puntos_a_redimir
+        
         db.session.commit()
         
+        new_total = puntos_disponibles - puntos_a_redimir
         return jsonify({'success': True, 'new_total': new_total}), 200
     
     except Exception as e:
+        db.session.rollback()
         print(f"Error: {e}")
-        return jsonify({'success': False, 'message': 'No tienes suficientes puntos'}), 400
+        return jsonify({'success': False, 'message': 'Error al redimir puntos'}), 500
 
 @app.route('/quesonpuntos')
 @login_required
 def quesonpuntos():
     documento = session.get('user_documento')
     total_puntos = 0
-    puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
-    if puntos_usuario:
-            total_puntos = puntos_usuario.total_puntos
+    if documento:
+        puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
+        if puntos_usuario:
+            puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
+            total_puntos = puntos_usuario.total_puntos - puntos_redimidos
     return render_template('puntos.html',total_puntos=total_puntos)
 
 @app.route('/homepuntos')
@@ -404,12 +428,12 @@ def quesonpuntos():
 def homepuntos():
     documento = session.get('user_documento')
     total_puntos = 0
-    puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
-    if puntos_usuario:
-            total_puntos = puntos_usuario.total_puntos
+    if documento:
+        puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
+        if puntos_usuario:
+            puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
+            total_puntos = puntos_usuario.total_puntos - puntos_redimidos
     return render_template('home.html',total_puntos=total_puntos)
-
-
 
 @app.route('/logout')
 @login_required
@@ -551,8 +575,6 @@ def crear_usuario(cedula, contraseña, habeasdata):
 
                     clave=bcrypt.generate_password_hash(contraseña).decode('utf-8')
                     
-                    
-
                     nuevo_usuario = Usuario(
                         documento=row.NIT.strip() if row.NIT else None,
                         email=row.EMAIL.strip() if row.EMAIL else None,
@@ -575,9 +597,7 @@ def crear_usuario(cedula, contraseña, habeasdata):
     except Exception as e:
         print("Error al crear el usuario:", e)
         raise e
-    
 #------------------funciones para traer informacion del carrusel------------------------------------------------
-
 def get_product_info(product_id):
     products = {
         1: {
@@ -588,7 +608,7 @@ def get_product_info(product_id):
             'image': 'images/iphone12.png'
         },
         2: {
-            'nombre': 'Diadema -Smartpods',
+            'nombre': 'Diadema - Smartpods',
             'precio': 999000,
             'puntos': 800 ,
             'descripcion': 'Diadema bluetooth SmartPods Pro A+  con diseño ergonómico, con la posibilidad de adaptarse a la cabeza',
@@ -608,24 +628,53 @@ def get_product_info(product_id):
             'descripcion': '',
             'image': 'images/smartwatch.png'
         }
-        # Añade más productos aquí
+
     }
     return products.get(product_id)
+
     #----------------------------------- mpuntosprincipal-----------------------------
-@app.route('/infobeneficios/<int:product_id>')
+@app.route('/infobeneficios/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 def infobeneficios(product_id):
     product = get_product_info(product_id)
-        # Asumimos que el documento del usuario está en la sesión
-    documento = session.get('user_documento')   
+    if not product:
+        flash('Producto no encontrado', 'error')
+        return redirect(url_for('mpuntosprincipal'))
+    
+    documento = session.get('user_documento')
     total_puntos = 0
     if documento:
-        # Consulta a la base de datos para obtener los puntos del usuario
         puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
         if puntos_usuario:
-            total_puntos = puntos_usuario.total_puntos
- 
-   
+            puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
+            total_puntos = puntos_usuario.total_puntos - puntos_redimidos
+    
+    if request.method == 'POST':
+        if total_puntos >= product['puntos']:
+            # Crear nuevo registro en historial_beneficio
+            nuevo_beneficio = historial_beneficio(
+                id=uuid.uuid4(),
+                documento=documento,
+                nombre_producto=product['nombre'],
+                valor_venta=product['precio'],
+                puntos_utilizados=product['puntos'],
+                fecha_compra=datetime.now()
+            )
+            
+            # Actualizar puntos del usuario
+            puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
+            puntos_usuario.puntos_redimidos = str(puntos_redimidos + product['puntos'])
+            
+            try:
+                db.session.add(nuevo_beneficio)
+                db.session.commit()
+                return redirect(url_for('mpuntosprincipal'))
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error: {e}")
+        else:
+            flash('No tienes suficientes puntos para este beneficio', 'error')
+    
     return render_template("infobeneficios.html", product=product, total_puntos=total_puntos)
 
 @app.route('/acumulapuntos')

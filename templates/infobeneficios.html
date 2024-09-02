@@ -128,6 +128,14 @@
                     {% else %}
                     <p>Producto no encontrado</p>
                     {% endif %}
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                         {% if messages %}
+                         {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                      {% endif %}
+                    {% endwith %}
                 </div>
                 <!-- Aside -->
                 {% if product %}
@@ -139,6 +147,7 @@
                     <div class="table-container">
                         <div class="container mt-4">
                             <h3 class="titulo3">¿Como desea hacer la compra? </h3>
+                            <form method="POST">
                             <table class="tabla-puntos">
                                 <thead>
                                     <tr>
@@ -149,7 +158,7 @@
                                     <tr>
                                         <td>
                                             <input type="number" id="points-input" class="redimepun" placeholder="Ingrese puntos">
-                                            <button id="redeem-button" class="btn btn-primary mt-2">Redimir Puntos</button>
+                                            <button type="submit" id="redeem-button" class="btn btn-primary mt-2">Redimir Puntos</button>
                                         </td>
                                     </tr>
                                     <tr>
@@ -157,6 +166,7 @@
                                     </tr>
                                 </tbody>
                             </table>
+                             </form>
                             <div class="checkbox-container">
                                 <label class="checkbox-button">
                                     <input type="checkbox" class="checkbox-input">
