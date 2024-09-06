@@ -80,13 +80,14 @@
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="/logout">Cerrar sesion</a>
-                                  </li>
+                                </li>
                                 <li class="nav-item d-flex align-items-center">
                                     <div class="card bg-light text-dark px-2 py-1" style="border-radius: 5px;">
                                         <span class="fw-bold">Puntos</span>
                                         <span id="nav-points" class="badge bg-primary ms-2">{{ total_puntos }}</span>
                                     </div>
                                 </li>
+
                             </ul>
                         </div>
                         <div class="dropdown ms-2">
@@ -104,98 +105,84 @@
             </div>
         </header>
         
-        {% if product %}
-        <div class="product-container">
-            <div class="row">
-                <!-- Contenido principal -->
-                <div class="col-md-8">
-                    <div class="product-container">
-                        <div class="row">
-                            <div class="product-card">
-                                <div class="product-image col-md-6">
-                                    <img src="{{ url_for('static', filename=product.image) }}" class="product-img"
-                                        alt="{{ product.nombre }}">
-                                </div>
-                                <div class="product-details col-md-6">
-                                    <h1 class="product-title">{{ product.nombre }}</h1>
-                                    <p class="product-price">Precio: ${{ "{:,}".format(product.precio) }} COP</p>
-                                    <p class="product-points">Puntos necesarios: {{ product.puntos }} Puntos Micelu</p>
-                                    <!---<p class="product-description">{{ product.descripcion }}</p>-->
-                                </div>
-                            </div>
+        
+ 
+            <!-- Aside -->
+            <aside class="col-md-4">
+                <div class="table-container">
+                    <div class="container mt-4">
+                        <h3 class="titulo3">¿Cómo desea hacer la compra?</h3>
+                        <table class="tabla-puntos">
+                            <thead>
+                                <tr>
+                                    <th>Puntos Mi Celu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <input type="text" id="points-input" class="redimepun" placeholder="Ingrese puntos">
+                                        <button id="redeem-button" class="btn btn-primary mt-2">Redimir Puntos</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="Pun">Puntos actuales: <span id="current-points">{{ total_puntos }}</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="checkbox-container">
+                            <label class="checkbox-button">
+                                <input type="checkbox" class="checkbox-input">
+                                <span class="checkbox-custom"></span>
+                                Solo Dinero
+                            </label>
                         </div>
                     </div>
-                    {% else %}
-                    <p>Producto no encontrado</p>
-                    {% endif %}
-
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                         {% if messages %}
-                         {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                      {% endif %}
-                    {% endwith %}
                 </div>
-                <!-- Aside -->
-                {% if product %}
-                <aside class="col-md-4">
-                    <div class="description-container">
-                        <h2>Descripción</h2>
-                        <p class="description">{{ product.descripcion }}</p>
-                    </div>
-                    <div class="table-container">
-                        <div class="container mt-4">
-                            <h3 class="titulo3">¿Como desea hacer la compra? </h3>
-                            <form method="POST">
-                            <table class="tabla-puntos">
-                                <thead>
-                                    <tr>
-                                        <th>Puntos Mi Celu</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <input type="number" id="points-input" class="redimepun" placeholder="Ingrese puntos">
-                                            <button type="submit" id="redeem-button" class="btn btn-primary mt-2">Redimir Puntos</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="Pun">Puntos actuales : <span id="current-points">{{ total_puntos }}</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                             </form>
-                            <div class="checkbox-container">
-                                <label class="checkbox-button">
-                                    <input type="checkbox" class="checkbox-input">
-                                    <span class="checkbox-custom"></span>
-                                    Solo Dinero
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
-                            
-                        </div>
-                    </div>
-
-                </aside>
-                {% endif %}
-
-            </div>
+            </aside>
         </div>
-
+    </div>
+        </body>
+            
+        </div>
+        <div class="modal fade" id="redemptionModal" tabindex="-1" aria-labelledby="redemptionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                  <h5 class="modal-title" id="redemptionModalLabel">Redención Exitosa</h5>
+                </div>
+                <div class="modal-body">
+                  <div class="text-center mb-4">
+                    <i class="fas fa-check-circle text-success fa-4x"></i>
+                  </div>
+                  <h4 class="text-center mb-4">¡Felicidades! Has canjeado tus puntos exitosamente.</h4>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="card mb-3">
+                        <div class="card-body">
+                          <h5 class="card-title">Código de Redención</h5>
+                          <p class="card-text"><strong id="redemptionCode" class="fs-4"></strong></p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="card mb-3">
+                        <div class="card-body">
+                          <h5 class="card-title">Descuento Aplicado</h5>
+                          <p class="card-text"><strong id="redemptionDiscount" class="fs-4"></strong></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-muted text-center">Guarda este código para usarlo en tu próxima compra.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="closeModalButton" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+              </div>
+            </div>
+          </div>
         <script src="path/to/bootstrap.bundle.min.js"></script> <!-- Bootstrap JS -->
-
-
-
-
-
-
-
-
         <div class="footer">
 
             <div class="Principalfooter">
@@ -224,7 +211,6 @@
         </div>
 
 
-    
 
 
         <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

@@ -37,12 +37,10 @@
 
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
   <!-- responsive style -->
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/beneficios.css') }}">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/responsive.css') }}">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/beneficios.css') }}">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="{{ url_for('static', filename='js/miperfil.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/puntos.js') }}"></script>
 
 </head>
 
@@ -85,8 +83,9 @@
                   <div class="card bg-light text-dark px-2 py-1" style="border-radius: 5px;">
                     <span class="fw-bold">Puntos</span>
                     <span id="nav-points" class="badge bg-primary ms-2">{{ total_puntos }}</span>
-                </div>
-               
+                  </div>
+                </li>
+                </li>
               </ul>
             </div>
             <div class="dropdown ms-2">
@@ -105,231 +104,97 @@
     </header>
     <!-- end header section -->
     <!------ inicio carrusel-->
+
     <div class="section">
       <img src="{{ url_for('static', filename='images/flyer.png') }}" class="imgcelu">
     </div>
+    <div class="carousel-wrapper">
+      <div id="carouselExample" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000">
+        <div class="carousel-indicators indicadores">
+          {% for i in range((products|length / 4)|round(0, 'ceil')|int) %}
+          <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="{{ i }}"
+            class="{% if loop.first %}active{% endif %}" aria-current="{% if loop.first %}true{% endif %}"
+            aria-label="Slide {{ i + 1 }}"></button>
+          {% endfor %}
+        </div>
+        <div class="carousel-inner">
+          {% for chunk in products|batch(4) %}
+          <div class="carousel-item {% if loop.first %}active{% endif %}">
+            <div class="row">
+              {% for product in chunk %}
+              <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                  <img src="{{ product.image_url or url_for('static', filename='images/placeholder.png') }}"
+                    class="card-img-top" alt="{{ product.name }}">
+                  <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    {% if product.price %}
+                    <p class="card-text">Precio: ${{ product.price }} COP</p>
+                    {% endif %}
+                    {% if product.color %}
+                    <p class="card-text">Color: {{ product.color }}</p>
+                    {% endif %}
+                    {% if product.points %}
+                    <p class="card-text1">Desde</p>
+                    <p class="card-text1">{{ product.points }} Puntos Micelu</p>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
+      </div>
+    </div>
+    <div class="text-center mt-4">
+      <a href="{{ url_for('redime_ahora') }}" class="btn btn-primary btn-lg">Redimir ahora</a>
+    </div>
+    <section>
+    </section>
+  <!-- menu section -->
+  <div class="footer">
+
+    <div class="Principalfooter">
+      <div class="half">
+        <a href="https://wa.me/3053333330" target="_blank" rel="noopener noreferrer" class="icon-whatsapp">
+          <i class="fa-brands fa-whatsapp"></i>
+        </a>
+        Comprar
+      </div>
+      <div class="social-icons">
+        <!-- Icono de TikTok -->
+        <a href="https://www.tiktok.com/@micelu_co" target="_blank" rel="noopener noreferrer" class="icon-tiktok">
+          <i class="fa-brands fa-tiktok"></i>
+        </a>
+        Tiktok
+        <!-- Icono de Instagram -->
+        <a href="https://www.instagram.com/micelu.co" target="_blank" rel="noopener noreferrer" class="icon-instagram">
+          <i class="fa-brands fa-instagram"></i>
+        </a>
+        Instagram
+      </div>
+    </div>
+    <p>&copy; <a href="https://micelu.co/" class="footer-link">Micelu.co</a></p>
   </div>
-  <div class="carousel-wrapper">
-    <div id="carouselExample" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-      <div class="carousel-inner">
-        <!-- Slide 1 -->
-        <div class="carousel-item active">
-          <div class="row">
-            <div class="col-md-3">
-              <div class="card">
-                <a href="{{ url_for('infobeneficios', product_id=1) }}">
-                  <img src="{{ url_for('static', filename='images/iphone12.png') }}" class="card-img-top"
-                    alt="Apple Watch">
-                  <div class="card-body">
-                    <h5 class="card-title">Iphone 12</h5>
-                    <p class="card-text">Precio: $1.450.000 COp</p>
-                    <p class="card-text1">Desde</p>
-                    <p class="card-text1">500 Puntos Micelu</p>
-                  </div>
-                </a>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card">
-                <a href="{{ url_for('infobeneficios', product_id=2) }}">
-                  <img src="{{ url_for('static', filename='images/diadema.png') }}" class="card-img-top" alt="iPhone">
-                  <div class="card-body">
-                    <h5 class="card-title">Diadema -Smartpods</h5>
-                    <p class="card-text">Precio: $999.000 COp</p>
-                    <p class="card-text1">Desde</p>
-                    <p class="card-text1">800 Puntos Micelu</p>
-                  </div>
-                </a>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card">
-                <a href="{{ url_for('infobeneficios', product_id=3) }}">
-                  <img src="{{ url_for('static', filename='images/airpods.jpg') }}" class="card-img-top" alt="AirPods">
-                  <div class="card-body">
-                    <h5 class="card-title">AirPods</h5>
-                    <p class="card-text">Precio: $675.000 COp</p>
-                    <p class="card-text1">Desde</p>
-                    <p class="card-text1">350 Puntos Micelu</p>
-                  </div>
-                </a>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card">
-                <a href="{{ url_for('infobeneficios', product_id=4) }}">
-                  <img src="{{ url_for('static', filename='images/smartwatch.png') }}" class="card-img-top"
-                    alt="Smartwatch">
-                  <div class="card-body">
-                    <h5 class="card-title">Smartwatch</h5>
-                    <p class="card-text">Precio: $210.000 COp</p>
-                    <p class="card-text1">Desde</p>
-                    <p class="card-text1">150 Puntos Micelu</p>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Slide 2 -->
-        <div class="carousel-item">
-          <div class="row">
-            <div class="col-md-3">
-              <div class="card">
-                <img src="{{ url_for('static', filename='images/phoneazul.png') }}" class="card-img-top"
-                  alt="AirPods 3">
-                <div class="card-body">
-                  <h5 class="card-title">Iphone 13</h5>
-                  <p class="card-text">Precio: $1.550.000 COp</p>
-                  <p class="card-text1">Desde</p>
-                  <p class="card-text1">500 Puntos Micelu</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card">
-                <img src="{{ url_for('static', filename='images/smart2.jpg') }}" class="card-img-top" alt="Smart 2">
-                <div class="card-body">
-                  <h5 class="card-title">Smart 2</h5>
-                  <p class="card-text">Precio: $179.000 COp</p>
-                  <p class="card-text1">Desde</p>
-                  <p class="card-text1">180 Puntos Micelu</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card">
-                <img src="{{ url_for('static', filename='images/iphone12.png') }}" class="card-img-top"
-                  alt="Seminuevos">
-                <div class="card-body">
-                  <h5 class="card-title">Seminuevos</h5>
-                  <p class="card-text">Precio: $249.000 COp</p>
-                  <p class="card-text1">Desde</p>
-                  <p class="card-text1">100 Puntos Micelu</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card">
-                <img src="{{ url_for('static', filename='images/smartwatch2.png') }}" class="card-img-top"
-                  alt="AirPods">
-                <div class="card-body">
-                  <h5 class="card-title">Smartwatch-series</h5>
-                  <p class="card-text">Precio: $210.000 COp</p>
-                  <p class="card-text1">Desde</p>
-                  <p class="card-text1">200 Puntos Micelu</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Slide 3 -->
-        <div class="carousel-item">
-          <div class="row">
-            <div class="col-md-3">
-              <div class="card">
-                <img src="{{ url_for('static', filename='images/airpods5.png') }}" class="card-img-top" alt="AirPods 5">
-                <div class="card-body">
-                  <h5 class="card-title">Airpods</h5>
-                  <p class="card-text">Precio: $250.000 COp</p>
-                  <p class="card-text1">Desde</p>
-                  <p class="card-text1">200 Puntos Micelu</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card">
-                <img src="{{ url_for('static', filename='images/airpods6.png') }}" class="card-img-top" alt="Smart 2">
-                <div class="card-body">
-                  <h5 class="card-title">FreePods</h5>
-                  <p class="card-text">Precio: $210.000 COp</p>
-                  <p class="card-text1">Desde</p>
-                  <p class="card-text1">180 Puntos Micelu</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card">
-                <img src="{{ url_for('static', filename='images/iphone12.png') }}" class="card-img-top"
-                  alt="Seminuevos">
-                <div class="card-body">
-                  <h5 class="card-title">Seminuevos</h5>
-                  <p class="card-text">Precio: $249.000 COp</p>
-                  <p class="card-text1">Desde</p>
-                  <p class="card-text1">100 Puntos Micelu</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card">
-                <img src="{{ url_for('static', filename='images/airpods.jpg') }}" class="card-img-top" alt="AirPods">
-                <div class="card-body">
-                  <h5 class="card-title">AirPods</h5>
-                  <p class="card-text">Precio: $199.000 COp</p>
-                  <p class="card-text1">Desde</p>
-                  <p class="card-text1">200 Puntos Micelu</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Indicadores -->
-      <div class="carousel-indicators indicadores">
-        <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="0" class="active" aria-current="true"
-          aria-label="Slide 1"></button>
-        <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="1" class="" aria-current="true"
-          aria-label="Slide 2"></button>
-        <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="2" class="" aria-current="true"
-          aria-label="Slide 3"></button>
-
-      </div>
-      <!-- Controles de navegación -->
-      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-      </button>
-    </div>
-    <section></section>
-    <!-- menu section -->
-    <div class="footer">
-
-      <div class="Principalfooter">
-        <div class="half">
-          <a href="https://wa.me/3053333330" target="_blank" rel="noopener noreferrer" class="icon-whatsapp">
-            <i class="fa-brands fa-whatsapp"></i>
-          </a>
-          Comprar
-        </div>
-        <div class="social-icons">
-          <!-- Icono de TikTok -->
-          <a href="https://www.tiktok.com/@micelu_co" target="_blank" rel="noopener noreferrer" class="icon-tiktok">
-            <i class="fa-brands fa-tiktok"></i>
-          </a>
-          Tiktok
-          <!-- Icono de Instagram -->
-          <a href="https://www.instagram.com/micelu.co" target="_blank" rel="noopener noreferrer"
-            class="icon-instagram">
-            <i class="fa-brands fa-instagram"></i>
-          </a>
-          Instagram
-        </div>
-      </div>
-      <p>&copy; <a href="https://micelu.co/" class="footer-link">Micelu.co</a></p>
-    </div>
 
 
 
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-      crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
 </body>
 
 </html>

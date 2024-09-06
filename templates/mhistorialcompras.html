@@ -112,6 +112,7 @@
               <th>Fecha</th>
               <th>Producto</th>
               <th>Valor</th>
+              <th>Tipo de Documento</th>
             </tr>
           </thead>
           <tbody>
@@ -120,6 +121,7 @@
                 <td>{{ item.FHCOMPRA }}</td>
                 <td>{{ item.PRODUCTO_NOMBRE }}</td>
                 <td>{{ "$ {:,.0f}".format(item.VLRVENTA) }}</td>
+                <td>{{ item.TIPODCTO }}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -127,7 +129,7 @@
       {% else %}
         <p>No se encontraron registros de compras.</p>
       {% endif %}
-    </div> 
+    </div>  
      
     <div class="footer">
       <div class="Principalfooter">

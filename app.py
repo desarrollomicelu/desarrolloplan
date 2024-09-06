@@ -15,9 +15,8 @@ from flask_mail import Mail, Message
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 import uuid
+from woocommerce import API
 from sqlalchemy.dialects.postgresql import UUID
- 
- 
 from pytz import UTC
 import sqlalchemy
 
@@ -68,7 +67,6 @@ class Puntos_Clientes(db.Model):
     __table_args__ = {'schema': 'plan_beneficios'}
     documento = db.Column(db.String(50), primary_key=True)
     total_puntos = db.Column(db.Integer)
-    #canal_trasanccion = db.Column(db.String(50))
     puntos_redimidos = db.Column(db.String(50))
     fecha_registro = db.Column(db.TIMESTAMP(timezone=True))
     
@@ -78,10 +76,10 @@ class historial_beneficio(db.Model):
     __table_args__ = {'schema': 'plan_beneficios'}
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     documento = db.Column(db.String(50), primary_key=True)
-    nombre_producto = db.Column(db.String(70))
-    valor_venta = db.Column(db.Integer)
+    valor_descuento = db.Column(db.Integer)
     puntos_utilizados = db.Column(db.Integer)
-    fecha_compra = db.Column(db.TIMESTAMP(timezone=True))
+    fecha_canjeo = db.Column(db.TIMESTAMP(timezone=True))
+    cupon = db.Column(db.String(70))
     
     
 def login_required(f):
@@ -174,12 +172,18 @@ def cambiar_contrasena():
 @login_required
 def miperfil():
     documento_usuario = session.get('user_documento')
-   
+    
     if documento_usuario:
         usuario = Usuario.query.filter_by(documento=documento_usuario).first()
-       
+        
         if usuario:
-            return render_template('miperfil.html', usuario=usuario)
+            total_puntos = 0
+            puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento_usuario).first()
+            if puntos_usuario:
+                puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
+                total_puntos = puntos_usuario.total_puntos - puntos_redimidos
+            
+            return render_template('miperfil.html', usuario=usuario, total_puntos=total_puntos)
         else:
             flash('No se encontró el usuario en la base de datos.', 'error')
             return redirect(url_for('login'))
@@ -193,7 +197,6 @@ def editar_perfil():
     data = request.json
     field = data.get('field')
     value = data.get('value')
-   
     documento_usuario = session.get('user_documento')
     usuario = Usuario.query.filter_by(documento=documento_usuario).first()
    
@@ -304,13 +307,14 @@ def mhistorialcompras():
         """
         cursor.execute(check_query, documento)
         count = cursor.fetchone().count
-
+        
         # Consulta principal
         query = """
         SELECT
             m.NOMBRE AS PRODUCTO_NOMBRE,
             m.VLRVENTA,
-            m.FHCOMPRA
+            m.FHCOMPRA,
+            m.TIPODCTO
         FROM
             Clientes c
         JOIN
@@ -320,6 +324,8 @@ def mhistorialcompras():
         WHERE
             c.HABILITADO = 'S'
             AND c.NIT = ?
+            AND m.VLRVENTA > 0
+            AND (m.TIPODCTO = 'FM' OR m.TIPODCTO = 'FB')
         ORDER BY
             m.FHCOMPRA DESC;
         """
@@ -332,11 +338,13 @@ def mhistorialcompras():
             venta = float(row.VLRVENTA)
             puntos_venta = int(venta // 1000)  # 1 punto por cada 1000 pesos
             total_puntos_nuevos += puntos_venta
+            tipo_documento = "Factura Medellín" if row.TIPODCTO == "FM" else "Factura Bogotá" if row.TIPODCTO == "FB" else row.TIPODCTO
             historial.append({
                 "PRODUCTO_NOMBRE": row.PRODUCTO_NOMBRE,
                 "VLRVENTA": venta,
                 "FHCOMPRA": row.FHCOMPRA.strftime('%Y-%m-%d'),
-                "PUNTOS_GANADOS": puntos_venta
+                "PUNTOS_GANADOS": puntos_venta,
+                "TIPODCTO": tipo_documento
             })
         
         cursor.close()
@@ -354,28 +362,98 @@ def mhistorialcompras():
             db.session.add(nuevo_usuario)
             db.session.commit()
             total_puntos = total_puntos_nuevos
-
+        
         return render_template('mhistorialcompras.html', historial=historial, total_puntos=total_puntos)
     
     except Exception as e:
-        # Manejar cualquier error que pueda ocurrir
         print(f"Error: {str(e)}")
         return "Ha ocurrido un error al procesar su solicitud.", 500
     
 @app.route('/mpuntosprincipal')
 @login_required
 def mpuntosprincipal():
+    # Asumimos que el documento del usuario está en la sesión
     documento = session.get('user_documento')
+    
     total_puntos = 0
     if documento:
+        # Consulta a la base de datos para obtener los puntos del usuario
         puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
         if puntos_usuario:
             puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
             total_puntos = puntos_usuario.total_puntos - puntos_redimidos
     
-    return render_template('mpuntosprincipal.html', total_puntos=total_puntos)
+    # Lista de IDs de productos que queremos mostrar
+    product_ids = [154814, 154809, 154774, 154765, 154752, 154613, 154765]
+    
+    # Obtener productos de WooCommerce
+    try:
+        wcapi = API(
+            url="https://micelu.co",
+            consumer_key="ck_24e1d02972506069aec3b589f727cc58636491df",
+            consumer_secret="cs_8bd38a861efefc56403c7899d5303c3351c9e028",
+            version="wc/v3",
+            timeout=30
+        )
+        
+        # Consultar todos los productos de una vez
+        response = wcapi.get("products", params={"include": ",".join(map(str, product_ids))})
+        
+        if response.status_code == 200:
+            wc_products = response.json()
+            products = []
+            for wc_product in wc_products:
+                product = {
+                    'id': wc_product['id'],
+                    'name': wc_product['name'],
+                    'price': wc_product['price'],
+                    'description': wc_product['description'],
+                    'short_description': wc_product['short_description'],
+                    'color': wc_product['attributes'][0]['options'][0] if wc_product['attributes'] else 'N/A',
+                    'image_url': wc_product['images'][0]['src'] if wc_product['images'] else url_for('static', filename='images/placeholder.png'),
+                    'points': int(float(wc_product['price'])/1000)  # Asumiendo que 1 punto = 1000 pesos
+                }
+                products.append(product)
+        else:
+            products = []
+    except Exception as e:
+        products = []
+    
+    
+    return render_template('mpuntosprincipal.html', total_puntos=total_puntos, products=products)
 
 #Ruta para manejar el descuento de los puntos
+
+from datetime import datetime
+import uuid
+
+wcapi = API(
+    url="https://micelu.co",
+    consumer_key="ck_4a0a6ac32a9cbfe9d5f0dd4a029312e0893e22a7",
+    consumer_secret="cs_e7d06f5199b3982b3e02234cc305a8f2d0b71dd0",
+    version="wc/v3"
+)
+
+wcapi = API(
+    url="https://micelu.co",
+    consumer_key="ck_4a0a6ac32a9cbfe9d5f0dd4a029312e0893e22a7",
+    consumer_secret="cs_e7d06f5199b3982b3e02234cc305a8f2d0b71dd0",
+    version="wc/v3"
+)
+
+from woocommerce import API
+import uuid
+from datetime import datetime, timedelta
+import random
+import string
+
+# Configuración de la API de WooCommerce
+wcapi = API(
+    url="https://micelu.co",
+    consumer_key="ck_4a0a6ac32a9cbfe9d5f0dd4a029312e0893e22a7",
+    consumer_secret="cs_e7d06f5199b3982b3e02234cc305a8f2d0b71dd0",
+    version="wc/v3"
+)
 
 @app.route('/redimir_puntos', methods=['POST'])
 @login_required
@@ -383,6 +461,7 @@ def redimir_puntos():
     try:
         documento = session.get('user_documento')
         puntos_a_redimir = int(request.json.get('points'))
+        codigo = request.json.get('code')  # Obtener el código del frontend
         
         puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
         if not puntos_usuario:
@@ -398,19 +477,65 @@ def redimir_puntos():
         # Actualizar puntos redimidos
         puntos_usuario.puntos_redimidos = str(puntos_redimidos + puntos_a_redimir)
         
-        # Actualizar total de puntos
-        puntos_usuario.total_puntos = total_puntos - puntos_a_redimir
+        # Calcular descuento
+        descuento = puntos_a_redimir * 100  # Asumiendo que cada punto vale 100 unidades de moneda
         
+        # Crear cupón en WooCommerce
+        woo_coupon = create_woo_coupon(codigo, descuento)
+        
+        if not woo_coupon:
+            return jsonify({'success': False, 'message': 'Error al crear el cupón en WooCommerce'}), 500
+        
+        # Crear nuevo registro en historial_beneficio
+        nuevo_historial = historial_beneficio(
+            id=uuid.uuid4(),
+            documento=documento,
+            valor_descuento=descuento,
+            puntos_utilizados=puntos_a_redimir,
+            fecha_canjeo=datetime.now(),
+            cupon=codigo
+        )
+        
+        # Agregar el nuevo registro a la sesión y hacer commit
+        db.session.add(nuevo_historial)
         db.session.commit()
         
         new_total = puntos_disponibles - puntos_a_redimir
-        return jsonify({'success': True, 'new_total': new_total}), 200
+        return jsonify({
+            'success': True, 
+            'new_total': new_total,
+            'codigo': codigo,
+            'descuento': descuento
+        }), 200
     
     except Exception as e:
         db.session.rollback()
         print(f"Error: {e}")
         return jsonify({'success': False, 'message': 'Error al redimir puntos'}), 500
 
+def create_woo_coupon(code, amount):
+    try:
+        data = {
+            "code": code,
+            "discount_type": "fixed_cart",
+            "amount": str(amount),
+            "individual_use": True,
+            "exclude_sale_items": True,
+            "usage_limit": 1,
+            "date_expires": (datetime.now() + timedelta(hours=12)).isoformat()
+        }
+        
+        response = wcapi.post("coupons", data).json()
+        
+        if 'id' in response:
+            return response
+        else:
+            print(f"Error al crear cupón: {response}")
+            return None
+    except Exception as e:
+        print(f"Error al crear cupón en WooCommerce: {e}")
+        return None
+    
 @app.route('/quesonpuntos')
 @login_required
 def quesonpuntos():
@@ -599,83 +724,52 @@ def crear_usuario(cedula, contraseña, habeasdata):
         raise e
 #------------------funciones para traer informacion del carrusel------------------------------------------------
 def get_product_info(product_id):
-    products = {
-        1: {
-            'nombre': 'Iphone 12',
-            'precio': 1450000,
-            'puntos': 500,
-            'descripcion': 'El Apple iPhone 15 conserva el diseño de la generación anterior pero incorpora el Dynamic Island ',
-            'image': 'images/iphone12.png'
-        },
-        2: {
-            'nombre': 'Diadema - Smartpods',
-            'precio': 999000,
-            'puntos': 800 ,
-            'descripcion': 'Diadema bluetooth SmartPods Pro A+  con diseño ergonómico, con la posibilidad de adaptarse a la cabeza',
-            'image': 'images/diadema.png'
-        },
-        3: {
-            'nombre': 'Airpods Pro 2 Alta Calidad (Genéricos 1.1)',
-            'precio': 675000,
-            'puntos': 350 ,
-            'descripcion': '',
-            'image': 'images/airpods.jpg'
-        },
-        4: {
-            'nombre': 'Smartwatch',
-            'precio': 210000,
-            'puntos': 150 ,
-            'descripcion': '',
-            'image': 'images/smartwatch.png'
-        }
-
-    }
-    return products.get(product_id)
+    try:
+        wcapi = API(
+            url="https://micelu.co",
+            consumer_key="ck_24e1d02972506069aec3b589f727cc58636491df",
+            consumer_secret="cs_8bd38a861efefc56403c7899d5303c3351c9e028",
+            version="wc/v3",
+            timeout=30
+        )
+       
+        response = wcapi.get(f"products/{product_id}")
+        if response.status_code == 200:
+            wc_product = response.json()
+            product = {
+                'id': wc_product['id'],
+                'name': wc_product['name'],
+                'price': wc_product['price'],
+                'description': wc_product['description'],
+                'short_description': wc_product['short_description'],
+                'color': wc_product['attributes'][0]['options'][0] if wc_product['attributes'] else 'N/A',
+                'image_url': wc_product['images'][0]['src'] if wc_product['images'] else url_for('static', filename='images/placeholder.png'),
+                'points': int(float(wc_product['price']) * 0.01),  # Asumiendo que 1 punto = 1% del precio
+                'attributes': wc_product['attributes']
+            }
+            return product
+        else:
+            print(f"Error al obtener el producto {product_id}: {response.text}")
+            return None
+    except Exception as e:
+        print(f"Error al obtener producto de WooCommerce: {str(e)}")
+        return None
 
     #----------------------------------- mpuntosprincipal-----------------------------
-@app.route('/infobeneficios/<int:product_id>', methods=['GET', 'POST'])
-@login_required
-def infobeneficios(product_id):
-    product = get_product_info(product_id)
-    if not product:
-        flash('Producto no encontrado', 'error')
-        return redirect(url_for('mpuntosprincipal'))
+@app.route('/redime_ahora')
+def redime_ahora():
+    documento_usuario = session.get('user_documento')
     
-    documento = session.get('user_documento')
-    total_puntos = 0
-    if documento:
-        puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento).first()
-        if puntos_usuario:
-            puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
-            total_puntos = puntos_usuario.total_puntos - puntos_redimidos
-    
-    if request.method == 'POST':
-        if total_puntos >= product['puntos']:
-            # Crear nuevo registro en historial_beneficio
-            nuevo_beneficio = historial_beneficio(
-                id=uuid.uuid4(),
-                documento=documento,
-                nombre_producto=product['nombre'],
-                valor_venta=product['precio'],
-                puntos_utilizados=product['puntos'],
-                fecha_compra=datetime.now()
-            )
-            
-            # Actualizar puntos del usuario
-            puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
-            puntos_usuario.puntos_redimidos = str(puntos_redimidos + product['puntos'])
-            
-            try:
-                db.session.add(nuevo_beneficio)
-                db.session.commit()
-                return redirect(url_for('mpuntosprincipal'))
-            except Exception as e:
-                db.session.rollback()
-                print(f"Error: {e}")
-        else:
-            flash('No tienes suficientes puntos para este beneficio', 'error')
-    
-    return render_template("infobeneficios.html", product=product, total_puntos=total_puntos)
+    if documento_usuario:
+        usuario = Usuario.query.filter_by(documento=documento_usuario).first()
+        
+        if usuario:
+            total_puntos = 0
+            puntos_usuario = Puntos_Clientes.query.filter_by(documento=documento_usuario).first()
+            if puntos_usuario:
+                puntos_redimidos = int(puntos_usuario.puntos_redimidos or '0')
+                total_puntos = puntos_usuario.total_puntos - puntos_redimidos
+    return render_template("redime_ahora.html",total_puntos=total_puntos)
 
 @app.route('/acumulapuntos')
 def acumulapuntos():

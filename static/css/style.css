@@ -893,10 +893,11 @@ body {
   table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 120px;
+
   }
   th, td {
-    padding: 8px 12px;
+    padding: 13px 14px;
     text-align: left;
     border-bottom: 1px solid #ddd;
   }
@@ -947,7 +948,6 @@ body {
     width: 100%;
     background-color: #000000; /* Color de fondo del footer */
     color: #fff; /* Color del texto del footer */
-    padding: 10px;
     text-align: center;
     border-top-left-radius: 3vw;
     border-top-right-radius: 3vw;
@@ -1122,14 +1122,17 @@ body {
   border: 1px solid #dee2e6;
   border-radius: 8px;
   padding: 10px;
+  width: 95%; /* Ajusta este valor para que el contenedor ocupe casi todo el ancho de la página */
+  margin: 0 auto; /* Centra el contenedor horizontalmente */
 }
- 
+
 /* Estilo para cada item del perfil */
 .profile-item {
   display: flex;
   flex-wrap: wrap;
   border-bottom: 1px solid #dee2e6;
-  padding: 10px 0;
+  padding: 2px;
+  width: 100%; /* Asegura que cada item ocupe todo el ancho del contenedor */
 }
  
 .profile-item:last-child {
@@ -1153,7 +1156,7 @@ body {
  
 /* Estilo para las imágenes en los valores */
 .profile-value img {
-  max-width: 19%;
+  max-width: 50%;
   height: auto;
 }
  
@@ -1161,6 +1164,7 @@ body {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
 }
+
  
 @media (min-width: 768px) {
   .profile-label {
@@ -1194,6 +1198,7 @@ body {
   padding: 10px 20px;
   border-radius: 30px;
   transition: background-color 0.3s ease, transform 0.3s ease;
+  text-align: center;
 }
  
 .btn-primary {
@@ -1297,4 +1302,11 @@ body {
 }
 
   
-  
+.boton_modal_cerrar{
+  text-align: center;
+}
+
+#closeModalButton {
+  display: block;
+  margin: 0 auto;
+}
